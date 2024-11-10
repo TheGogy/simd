@@ -3,9 +3,7 @@
 *
 *   REQUIRED FLAGS: -std=c++20 -mfma -msse4.1
 *
-*   See https://gist.github.com/TheGogy/03b3cc692f8cb0c040031ad272b6634f/
-*
-*   A simple wrapper around __m128 for SIMD operations on four-element vectors.
+*   A simple wrapper around __m256d for SIMD operations on four-element vectors.
 *   This class supports:
 *   - arithmetic operations (+, -, *, /)
 *   - bitwise operations    (&, |, ^, ~)
@@ -29,7 +27,6 @@
 #include <limits>
 #include <numbers>
 #include <ostream>
-#include <xmmintrin.h>
 
 
 /**
@@ -258,7 +255,7 @@ public:
     */
     Simd4 clamp(const Simd4& min, const Simd4& max) const
     {
-        return simd_min(simd_max(*this, min), max);
+        return Simd4::min(Simd4::max(*this, min), max);
     }
 
 
@@ -328,11 +325,34 @@ public:
     /**
     * Calculates the dot product of the vector with itself.
     *
+    * @return The output of the dot product.
+    */
+    float dot() const
+    {
+        return _mm_cvtss_f32(_mm_dp_ps(data, data, 0x71));
+    }
+
+
+    /**
+    * Calculates the dot product of the vector with another.
+    *
+    * @param other The other vector to calculate the dot product with.
+    * @return The output of the dot product.
+    */
+    float dot(const Simd4& other) const
+    {
+        return _mm_cvtss_f32(_mm_dp_ps(data, other.data, 0x71));
+    }
+
+
+    /**
+    * Calculates the dot product of the vector with itself.
+    *
     * @tparam Mask The mask to use for the dot product.
     * @return The output of the dot product.
     */
-    template <int Mask = 0x71>
-    Simd4 dot_prod() const
+    template <int Mask>
+    Simd4 dot() const
     {
         return Simd4(_mm_dp_ps(data, data, Mask));
     }
@@ -345,8 +365,8 @@ public:
     * @param other The other vector to calculate the dot product with.
     * @return The output of the dot product.
     */
-    template <int Mask = 0x71>
-    Simd4 dot_prod(const Simd4& other) const
+    template <int Mask>
+    Simd4 dot(const Simd4& other) const
     {
         return Simd4(_mm_dp_ps(data, other.data, Mask));
     }
@@ -358,7 +378,7 @@ public:
     * @param other The other vector to calculate the cross product with.
     * @return The output of the cross product.
     */
-    inline const Simd4 cross_prod(const Simd4& other) const
+    const Simd4 cross_prod(const Simd4& other) const
     {
         Simd4 tmp0 = other.shuffle<_MM_SHUFFLE(3, 0, 2, 1)>();
         Simd4 tmp1 =       shuffle<_MM_SHUFFLE(3, 0, 2, 1)>();
@@ -366,6 +386,18 @@ public:
         tmp1 *= other;
         const Simd4 tmp2 = tmp0 - tmp1;
         return tmp2.shuffle<_MM_SHUFFLE(3, 0, 2, 1)>();
+    }
+
+
+    /**
+    * Tests to see if all values are set to 0.
+    * Note this is different to bool().
+    *
+    * @return Whether all elements are set to 0.
+    */
+    bool is_zero() const {
+        const __m128 cmp = _mm_cmpneq_ps(data, _mm_setzero_ps());
+        return _mm_movemask_ps(cmp) == 0;
     }
 
 
@@ -418,7 +450,7 @@ public:
     * @param b The second vector.
     * @return A vector containing the max elements between the input vectors.
     */
-    friend Simd4 simd_max(const Simd4& a, const Simd4& b)
+    static Simd4 max(const Simd4& a, const Simd4& b)
     {
         return Simd4(_mm_max_ps(a.data, b.data));
     }
@@ -431,7 +463,7 @@ public:
     * @param b The second vector.
     * @return A vector containing the min elements between the input vectors.
     */
-    friend Simd4 simd_min(const Simd4& a, const Simd4& b)
+    static Simd4 min(const Simd4& a, const Simd4& b)
     {
         return Simd4(_mm_min_ps(a.data, b.data));
     }
@@ -444,7 +476,7 @@ public:
     * @param b The second vector to horizontally add.
     * @return The horizontal sum of the vectors.
     */
-    friend Simd4 hadd(const Simd4& a, const Simd4& b)
+    static Simd4 hadd(const Simd4& a, const Simd4& b)
     {
         return Simd4(_mm_hadd_ps(a.data, b.data));
     }
@@ -457,7 +489,7 @@ public:
     * @param b The second vector to horizontally sub.
     * @return The horizontal subtraction of the vectors.
     */
-    friend Simd4 hsub(const Simd4& a, const Simd4& b)
+    static Simd4 hsub(const Simd4& a, const Simd4& b)
     {
         return Simd4(_mm_hsub_ps(a.data, b.data));
     }
@@ -475,7 +507,7 @@ public:
     * @return Whether the vectors are equal along a mask.
     */
     template <int Mask = 0b1111>
-    friend bool is_eq(const Simd4& a, const Simd4& b)
+    static bool is_eq(const Simd4& a, const Simd4& b)
     {
         const __m128 cmp = _mm_cmpeq_ps(a.data, b.data);
         const int result = _mm_movemask_ps(cmp);
@@ -489,20 +521,36 @@ public:
     * @note The mask is flipped around: 0b0011 compares
     * the first two numbers for example.
     *
-    * @tparam Epsilon The range considered to be equal.
     * @tparam Mask    The mask of which numbers to check.
+    * @tparam Epsilon The range considered to be equal.
     * @param a        The first vector to check for equality.
     * @param b        The second vector to check for equality.
     * @return Whether the vectors are equal along a mask.
     */
-    template <float Epsilon, int Mask = 0b1111>
-    friend bool is_approx_eq(const Simd4& a, const Simd4& b)
+    template <int Mask = 0b1111>
+    static bool is_approx_eq(const Simd4& a, const Simd4& b, float epsilon)
     {
         const __m128 abs_diff = _mm_andnot_ps(_mm_set1_ps(-0.f), _mm_sub_ps(a.data, b.data));
-        const __m128 cmp      = _mm_cmplt_ps(abs_diff, _mm_set1_ps(Epsilon));
+        const __m128 cmp      = _mm_cmplt_ps(abs_diff, _mm_set1_ps(epsilon));
         const int result      = _mm_movemask_ps(cmp);
         return (result & Mask) == Mask;
     }
+
+
+    /**
+    * @brief Selects between two vectors based on a mask.
+    * Returns mask ? a : b for each component.
+    *
+    * @param mask The mask vector (typically from a comparison)
+    * @param a First vector (selected when mask is true)
+    * @param b Second vector (selected when mask is false)
+    * @return A new vector with components selected from a or b based on mask
+    */
+    static Simd4 select(const Simd4& mask, const Simd4& a, const Simd4& b)
+    {
+        return Simd4(_mm_blendv_ps(b.data, a.data, mask.data));
+    }
+
 
     /**
     * Special cases for shuffles.
@@ -542,10 +590,15 @@ public:
     Simd4 operator^(const Simd4& other) const { return Simd4(_mm_xor_ps(data, other.data)); }
     Simd4 operator~() const { return Simd4(_mm_andnot_ps(data, _mm_set1_ps(-1.0f))); }
 
-    explicit operator bool() const { return _mm_movemask_ps(data); }
+    explicit operator bool() const { return !_mm_testz_ps(data, data); }
 
-    Simd4 operator<(const Simd4& other) const  { return Simd4(_mm_cmplt_ps(data, other.data)); }
-    Simd4 operator>(const Simd4& other) const  { return Simd4(_mm_cmpgt_ps(data, other.data)); }
+    /**
+    * Comparison operators
+    */
+    Simd4 operator==(const Simd4& other) const { return Simd4(_mm_cmpeq_ps(data, other.data)); }
+    Simd4 operator!=(const Simd4& other) const { return Simd4(_mm_cmpneq_ps(data, other.data)); }
+    Simd4 operator< (const Simd4& other) const { return Simd4(_mm_cmplt_ps(data, other.data)); }
+    Simd4 operator> (const Simd4& other) const { return Simd4(_mm_cmpgt_ps(data, other.data)); }
     Simd4 operator<=(const Simd4& other) const { return Simd4(_mm_cmple_ps(data, other.data)); }
     Simd4 operator>=(const Simd4& other) const { return Simd4(_mm_cmpge_ps(data, other.data)); }
 

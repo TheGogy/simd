@@ -17,9 +17,9 @@ int main()
 }
 ```
 ```bash
-g++ -msse4.1 -std=c++20 main.cpp -o main
+g++ -msse4.1 -mfma -std=c++20 main.cpp -o main
 ./main
-# [5, 6, 6, 5]
+# [5, 5, 5, 5]
 ```
 
-Required flags are `-msse4.1 -std=c++20`.
+Required flags are `-msse4.1 -mfma -std=c++20`.
