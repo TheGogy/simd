@@ -99,7 +99,7 @@ public:
     *
     * @return The first element in the array.
     */
-    float cvtss() const
+    float cvtss() const noexcept
     {
         return _mm_cvtss_f32(data);
     }
@@ -112,7 +112,7 @@ public:
     *
     * @return A Simd4 array containing the element wise square root.
     */
-    Simd4 sqrt() const
+    Simd4 sqrt() const noexcept
     {
         return Simd4(_mm_sqrt_ps(data));
     }
@@ -125,7 +125,7 @@ public:
     *
     * @return A Simd4 array containing the element wise reciprocal square root.
     */
-    Simd4 rsqrt() const
+    Simd4 rsqrt() const noexcept
     {
         return Simd4(_mm_rsqrt_ps(data));
     }
@@ -138,7 +138,7 @@ public:
     *
     * @return A Simd4 array containing the element wise reciprocal.
     */
-    Simd4 reciprocal() const
+    Simd4 reciprocal() const noexcept
     {
         return Simd4(_mm_rcp_ps(data));
     }
@@ -149,7 +149,7 @@ public:
     *
     * @return The elements of the Simd4 array as an __m128i value.
     */
-    __m128i as_m128i() const
+    __m128i as_m128i() const noexcept
     {
         return _mm_cvtps_epi32(data);
     }
@@ -160,7 +160,7 @@ public:
     *
     * @return The sum of all the elements.
     */
-    float sum() const
+    float sum() const noexcept
     {
         __m128 sum_1 = _mm_hadd_ps(data, data);
         __m128 sum_2 = _mm_hadd_ps(sum_1, sum_1);
@@ -173,7 +173,7 @@ public:
     *
     * @return The sum of the first 3 elements.
     */
-    float sum3() const
+    float sum3() const noexcept
     {
         __m128 v = data;
         v = _mm_add_ps(v, _mm_shuffle_ps(v, v, _MM_SHUFFLE(3, 2, 1, 1)));
@@ -189,7 +189,7 @@ public:
     *
     * @return The horizontal maximum element.
     */
-    float hmax() const
+    float hmax() const noexcept
     {
         __m128 v = data;
         v = _mm_max_ps(v, _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 1, 2, 3)));
@@ -205,7 +205,7 @@ public:
     *
     * @return The horizontal minimum element.
     */
-    float hmin() const
+    float hmin() const noexcept
     {
         __m128 v = data;
         v = _mm_min_ps(v, _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 1, 2, 3)));
@@ -221,7 +221,7 @@ public:
     *
     * @return The horizontal max element.
     */
-    float hmax3() const
+    float hmax3() const noexcept
     {
         __m128 v = data;
         v = _mm_max_ps(v, _mm_shuffle_ps(v, v, _MM_SHUFFLE(3, 2, 1, 1)));
@@ -237,7 +237,7 @@ public:
     *
     * @return The horizontal min element.
     */
-    float hmin3() const
+    float hmin3() const noexcept
     {
         __m128 v = data;
         v = _mm_min_ps(v, _mm_shuffle_ps(v, v, _MM_SHUFFLE(3, 2, 1, 1)));
@@ -253,7 +253,7 @@ public:
     * @param max The maximum vector.
     * @return The clamped vector.
     */
-    Simd4 clamp(const Simd4& min, const Simd4& max) const
+    Simd4 clamp(const Simd4& min, const Simd4& max) const noexcept
     {
         return Simd4::min(Simd4::max(*this, min), max);
     }
@@ -266,7 +266,7 @@ public:
     * @param max The maximum parameter.
     * @return The clamped vector.
     */
-    Simd4 clamp(float min, float max) const
+    Simd4 clamp(float min, float max) const noexcept
     {
         return clamp(Simd4(min), Simd4(max));
     }
@@ -282,7 +282,7 @@ public:
     * @return The shuffled Simd vector.
     */
     template <int Mask>
-    Simd4 shuffle() const
+    Simd4 shuffle() const noexcept
     {
         return Simd4(_mm_shuffle_ps(data, data, Mask));
     }
@@ -299,7 +299,7 @@ public:
     * @return The shuffled Simd vector.
     */
     template <int Mask>
-    Simd4 shuffle(const Simd4& other) const
+    Simd4 shuffle(const Simd4& other) const noexcept
     {
         return Simd4(_mm_shuffle_ps(data, other.data, Mask));
     }
@@ -316,7 +316,7 @@ public:
     * @return The shuffled Simd vector.
     */
     template <int Mask>
-    Simd4 cast_shuffle() const
+    Simd4 cast_shuffle() const noexcept
     {
         return Simd4(_mm_castsi128_ps(_mm_shuffle_epi32(_mm_castps_si128(data), Mask)));
     }
@@ -327,7 +327,7 @@ public:
     *
     * @return The output of the dot product.
     */
-    float dot() const
+    float dot() const noexcept
     {
         return _mm_cvtss_f32(_mm_dp_ps(data, data, 0x71));
     }
@@ -339,7 +339,7 @@ public:
     * @param other The other vector to calculate the dot product with.
     * @return The output of the dot product.
     */
-    float dot(const Simd4& other) const
+    float dot(const Simd4& other) const noexcept
     {
         return _mm_cvtss_f32(_mm_dp_ps(data, other.data, 0x71));
     }
@@ -352,7 +352,7 @@ public:
     * @return The output of the dot product.
     */
     template <int Mask>
-    Simd4 dot() const
+    Simd4 dot() const noexcept
     {
         return Simd4(_mm_dp_ps(data, data, Mask));
     }
@@ -366,7 +366,7 @@ public:
     * @return The output of the dot product.
     */
     template <int Mask>
-    Simd4 dot(const Simd4& other) const
+    Simd4 dot(const Simd4& other) const noexcept
     {
         return Simd4(_mm_dp_ps(data, other.data, Mask));
     }
@@ -378,7 +378,7 @@ public:
     * @param other The other vector to calculate the cross product with.
     * @return The output of the cross product.
     */
-    const Simd4 cross_prod(const Simd4& other) const
+    const Simd4 cross_prod(const Simd4& other) const noexcept
     {
         Simd4 tmp0 = other.shuffle<_MM_SHUFFLE(3, 0, 2, 1)>();
         Simd4 tmp1 =       shuffle<_MM_SHUFFLE(3, 0, 2, 1)>();
@@ -395,7 +395,8 @@ public:
     *
     * @return Whether all elements are set to 0.
     */
-    bool is_zero() const {
+    bool is_zero() const noexcept
+    {
         const __m128 cmp = _mm_cmpneq_ps(data, _mm_setzero_ps());
         return _mm_movemask_ps(cmp) == 0;
     }
@@ -409,7 +410,7 @@ public:
     *
     * @return An array containing the elements.
     */
-    std::array<float, 4> as_arr() const
+    std::array<float, 4> as_arr() const noexcept
     {
         alignas(16) std::array<float, 4> elements;
         _mm_store_ps(elements.data(), data);
@@ -425,7 +426,7 @@ public:
     *
     * @return An array containing the elements as integers.
     */
-    std::array<int, 4> as_arr_int() const
+    std::array<int, 4> as_arr_int() const noexcept
     {
         alignas(16) std::array<int, 4> elements;
         _mm_storeu_si128(reinterpret_cast<__m128i*>(elements.data()), as_m128i());
@@ -436,7 +437,7 @@ public:
     /**
     * Access elements by index.
     */
-    float operator[](int index) const
+    float operator[](int index) const noexcept
     {
         assert(index < 4 && index >= 0);
         return as_arr()[index];
@@ -450,7 +451,7 @@ public:
     * @param b The second vector.
     * @return A vector containing the max elements between the input vectors.
     */
-    static Simd4 max(const Simd4& a, const Simd4& b)
+    static Simd4 max(const Simd4& a, const Simd4& b) noexcept
     {
         return Simd4(_mm_max_ps(a.data, b.data));
     }
@@ -463,7 +464,7 @@ public:
     * @param b The second vector.
     * @return A vector containing the min elements between the input vectors.
     */
-    static Simd4 min(const Simd4& a, const Simd4& b)
+    static Simd4 min(const Simd4& a, const Simd4& b) noexcept
     {
         return Simd4(_mm_min_ps(a.data, b.data));
     }
@@ -476,7 +477,7 @@ public:
     * @param b The second vector to horizontally add.
     * @return The horizontal sum of the vectors.
     */
-    static Simd4 hadd(const Simd4& a, const Simd4& b)
+    static Simd4 hadd(const Simd4& a, const Simd4& b) noexcept
     {
         return Simd4(_mm_hadd_ps(a.data, b.data));
     }
@@ -489,7 +490,7 @@ public:
     * @param b The second vector to horizontally sub.
     * @return The horizontal subtraction of the vectors.
     */
-    static Simd4 hsub(const Simd4& a, const Simd4& b)
+    static Simd4 hsub(const Simd4& a, const Simd4& b) noexcept
     {
         return Simd4(_mm_hsub_ps(a.data, b.data));
     }
@@ -507,7 +508,7 @@ public:
     * @return Whether the vectors are equal along a mask.
     */
     template <int Mask = 0b1111>
-    static bool is_eq(const Simd4& a, const Simd4& b)
+    static bool is_eq(const Simd4& a, const Simd4& b) noexcept
     {
         const __m128 cmp = _mm_cmpeq_ps(a.data, b.data);
         const int result = _mm_movemask_ps(cmp);
@@ -528,7 +529,7 @@ public:
     * @return Whether the vectors are equal along a mask.
     */
     template <int Mask = 0b1111>
-    static bool is_approx_eq(const Simd4& a, const Simd4& b, float epsilon)
+    static bool is_approx_eq(const Simd4& a, const Simd4& b, float epsilon) noexcept
     {
         const __m128 abs_diff = _mm_andnot_ps(_mm_set1_ps(-0.f), _mm_sub_ps(a.data, b.data));
         const __m128 cmp      = _mm_cmplt_ps(abs_diff, _mm_set1_ps(epsilon));
@@ -546,7 +547,7 @@ public:
     * @param b Second vector (selected when mask is false)
     * @return A new vector with components selected from a or b based on mask
     */
-    static Simd4 select(const Simd4& mask, const Simd4& a, const Simd4& b)
+    static Simd4 select(const Simd4& mask, const Simd4& a, const Simd4& b) noexcept
     {
         return Simd4(_mm_blendv_ps(b.data, a.data, mask.data));
     }
@@ -555,52 +556,52 @@ public:
     /**
     * Special cases for shuffles.
     */
-    friend Simd4 shuffle_0101(const Simd4& a, const Simd4& b) { return Simd4(_mm_movelh_ps(a.data, b.data)); }
-    friend Simd4 shuffle_2323(const Simd4& a, const Simd4& b) { return Simd4(_mm_movehl_ps(b.data, a.data)); }
-    friend Simd4 shuffle_0022(const Simd4& a) { return Simd4(_mm_moveldup_ps(a.data)); }
-    friend Simd4 shuffle_1133(const Simd4& a) { return Simd4(_mm_movehdup_ps(a.data)); }
+    friend Simd4 shuffle_0101(const Simd4& a, const Simd4& b) noexcept { return Simd4(_mm_movelh_ps(a.data, b.data)); }
+    friend Simd4 shuffle_2323(const Simd4& a, const Simd4& b) noexcept { return Simd4(_mm_movehl_ps(b.data, a.data)); }
+    friend Simd4 shuffle_0022(const Simd4& a) noexcept { return Simd4(_mm_moveldup_ps(a.data)); }
+    friend Simd4 shuffle_1133(const Simd4& a) noexcept { return Simd4(_mm_movehdup_ps(a.data)); }
 
     /**
     * Overloaded operations.
     */
-    Simd4 operator+(const Simd4& other) const { return Simd4(_mm_add_ps(data, other.data)); }
-    Simd4 operator-(const Simd4& other) const { return Simd4(_mm_sub_ps(data, other.data)); }
-    Simd4 operator*(const Simd4& other) const { return Simd4(_mm_mul_ps(data, other.data)); }
-    Simd4 operator/(const Simd4& other) const { return Simd4(_mm_div_ps(data, other.data)); }
+    Simd4 operator+(const Simd4& other) const noexcept { return Simd4(_mm_add_ps(data, other.data)); }
+    Simd4 operator-(const Simd4& other) const noexcept { return Simd4(_mm_sub_ps(data, other.data)); }
+    Simd4 operator*(const Simd4& other) const noexcept { return Simd4(_mm_mul_ps(data, other.data)); }
+    Simd4 operator/(const Simd4& other) const noexcept { return Simd4(_mm_div_ps(data, other.data)); }
 
-    void operator+=(const Simd4& other) { data = _mm_add_ps(data, other.data); }
-    void operator-=(const Simd4& other) { data = _mm_sub_ps(data, other.data); }
-    void operator*=(const Simd4& other) { data = _mm_mul_ps(data, other.data); }
-    void operator/=(const Simd4& other) { data = _mm_div_ps(data, other.data); }
+    void operator+=(const Simd4& other) noexcept { data = _mm_add_ps(data, other.data); }
+    void operator-=(const Simd4& other) noexcept { data = _mm_sub_ps(data, other.data); }
+    void operator*=(const Simd4& other) noexcept { data = _mm_mul_ps(data, other.data); }
+    void operator/=(const Simd4& other) noexcept { data = _mm_div_ps(data, other.data); }
 
-    Simd4 operator+(float scalar) const { return Simd4(_mm_add_ps(data, _mm_set1_ps(scalar))); }
-    Simd4 operator-(float scalar) const { return Simd4(_mm_sub_ps(data, _mm_set1_ps(scalar))); }
-    Simd4 operator*(float scalar) const { return Simd4(_mm_mul_ps(data, _mm_set1_ps(scalar))); }
-    Simd4 operator/(float scalar) const { return Simd4(_mm_div_ps(data, _mm_set1_ps(scalar))); }
+    Simd4 operator+(float scalar) const noexcept { return Simd4(_mm_add_ps(data, _mm_set1_ps(scalar))); }
+    Simd4 operator-(float scalar) const noexcept { return Simd4(_mm_sub_ps(data, _mm_set1_ps(scalar))); }
+    Simd4 operator*(float scalar) const noexcept { return Simd4(_mm_mul_ps(data, _mm_set1_ps(scalar))); }
+    Simd4 operator/(float scalar) const noexcept { return Simd4(_mm_div_ps(data, _mm_set1_ps(scalar))); }
 
-    void operator+=(float scalar) { data = _mm_add_ps(data, _mm_set1_ps(scalar)); }
-    void operator-=(float scalar) { data = _mm_sub_ps(data, _mm_set1_ps(scalar)); }
-    void operator*=(float scalar) { data = _mm_mul_ps(data, _mm_set1_ps(scalar)); }
-    void operator/=(float scalar) { data = _mm_div_ps(data, _mm_set1_ps(scalar)); }
+    void operator+=(float scalar) noexcept { data = _mm_add_ps(data, _mm_set1_ps(scalar)); }
+    void operator-=(float scalar) noexcept { data = _mm_sub_ps(data, _mm_set1_ps(scalar)); }
+    void operator*=(float scalar) noexcept { data = _mm_mul_ps(data, _mm_set1_ps(scalar)); }
+    void operator/=(float scalar) noexcept { data = _mm_div_ps(data, _mm_set1_ps(scalar)); }
 
-    Simd4 operator-() const { return *this * Simd4::minus_one(); }
+    Simd4 operator-() const noexcept { return *this * Simd4::minus_one(); }
 
-    Simd4 operator&(const Simd4& other) const { return Simd4(_mm_and_ps(data, other.data)); }
-    Simd4 operator|(const Simd4& other) const { return Simd4(_mm_or_ps(data, other.data)); }
-    Simd4 operator^(const Simd4& other) const { return Simd4(_mm_xor_ps(data, other.data)); }
-    Simd4 operator~() const { return Simd4(_mm_andnot_ps(data, _mm_set1_ps(-1.0f))); }
+    Simd4 operator&(const Simd4& other) const noexcept { return Simd4(_mm_and_ps(data, other.data)); }
+    Simd4 operator|(const Simd4& other) const noexcept { return Simd4(_mm_or_ps(data, other.data)); }
+    Simd4 operator^(const Simd4& other) const noexcept { return Simd4(_mm_xor_ps(data, other.data)); }
+    Simd4 operator~() const noexcept { return Simd4(_mm_andnot_ps(data, _mm_set1_ps(-1.0f))); }
 
-    explicit operator bool() const { return !_mm_testz_ps(data, data); }
+    explicit operator bool() const noexcept { return !_mm_testz_ps(data, data); }
 
     /**
     * Comparison operators
     */
-    Simd4 operator==(const Simd4& other) const { return Simd4(_mm_cmpeq_ps(data, other.data)); }
-    Simd4 operator!=(const Simd4& other) const { return Simd4(_mm_cmpneq_ps(data, other.data)); }
-    Simd4 operator< (const Simd4& other) const { return Simd4(_mm_cmplt_ps(data, other.data)); }
-    Simd4 operator> (const Simd4& other) const { return Simd4(_mm_cmpgt_ps(data, other.data)); }
-    Simd4 operator<=(const Simd4& other) const { return Simd4(_mm_cmple_ps(data, other.data)); }
-    Simd4 operator>=(const Simd4& other) const { return Simd4(_mm_cmpge_ps(data, other.data)); }
+    Simd4 operator==(const Simd4& other) const noexcept { return Simd4(_mm_cmpeq_ps(data, other.data)); }
+    Simd4 operator!=(const Simd4& other) const noexcept { return Simd4(_mm_cmpneq_ps(data, other.data)); }
+    Simd4 operator< (const Simd4& other) const noexcept { return Simd4(_mm_cmplt_ps(data, other.data)); }
+    Simd4 operator> (const Simd4& other) const noexcept { return Simd4(_mm_cmpgt_ps(data, other.data)); }
+    Simd4 operator<=(const Simd4& other) const noexcept { return Simd4(_mm_cmple_ps(data, other.data)); }
+    Simd4 operator>=(const Simd4& other) const noexcept { return Simd4(_mm_cmpge_ps(data, other.data)); }
 
 
     /**

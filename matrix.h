@@ -76,7 +76,7 @@ public:
     * @param v The vector to apply the transform to.
     * @return The vector with the transform applied.
     */
-    Matrix4x4 inverse() const
+    Matrix4x4 inverse() const noexcept
     {
         const Simd4 A = shuffle_0101(rows[0], rows[1]);
         const Simd4 B = shuffle_0101(rows[2], rows[3]);
@@ -182,53 +182,76 @@ public:
         return rows[index / 4][index % 4];
     }
 
+    
+    /**
+    * Gets a value at a specific index of the matrix.
+    * @param row The row of the value to get
+    * @param col The column of the value to get
+    * @return The value at the index
+    */
+    float at(int row, int col) const
+    {
+        assert(row >= 0 && row < 4 && col >= 0 && col < 4);
+        return rows[row][col];
+    }
+
 
     /**
     * Arithmetic operators
     */
     // Scalar operations
-    Matrix4x4 operator*(float scalar) const { 
+    Matrix4x4 operator*(float scalar) const noexcept
+    { 
         return Matrix4x4(rows[0] * scalar, rows[1] * scalar, 
                         rows[2] * scalar, rows[3] * scalar); 
     }
-    Matrix4x4 operator/(float scalar) const { 
+    Matrix4x4 operator/(float scalar) const noexcept
+    { 
         float inv = 1.0f / scalar;
         return *this * inv;
     }
-    void operator*=(float scalar) { 
+    void operator*=(float scalar) noexcept
+    { 
         rows[0] *= scalar; rows[1] *= scalar; 
         rows[2] *= scalar; rows[3] *= scalar; 
     }
-    void operator/=(float scalar) { 
+    void operator/=(float scalar) noexcept
+    { 
         float inv = 1.0f / scalar;
         *this *= inv;
     }
 
     // Matrix operations
-    Matrix4x4 operator+(const Matrix4x4& rhs) const { 
+    Matrix4x4 operator+(const Matrix4x4& rhs) const noexcept
+    { 
         return Matrix4x4(rows[0] + rhs.rows[0], rows[1] + rhs.rows[1],
                          rows[2] + rhs.rows[2], rows[3] + rhs.rows[3]); 
     }
-    Matrix4x4 operator-(const Matrix4x4& rhs) const { 
+    Matrix4x4 operator-(const Matrix4x4& rhs) const noexcept
+    { 
         return Matrix4x4(rows[0] - rhs.rows[0], rows[1] - rhs.rows[1],
                          rows[2] - rhs.rows[2], rows[3] - rhs.rows[3]); 
     }
-    void operator+=(const Matrix4x4& rhs) { 
+    void operator+=(const Matrix4x4& rhs) noexcept
+    { 
         rows[0] += rhs.rows[0]; rows[1] += rhs.rows[1];
         rows[2] += rhs.rows[2]; rows[3] += rhs.rows[3];
     }
-    void operator-=(const Matrix4x4& rhs) { 
+    void operator-=(const Matrix4x4& rhs) noexcept
+    { 
         rows[0] -= rhs.rows[0]; rows[1] -= rhs.rows[1];
         rows[2] -= rhs.rows[2]; rows[3] -= rhs.rows[3];
     }
 
     // Unary operators
-    Matrix4x4 operator-() const { 
+    Matrix4x4 operator-() const noexcept
+    { 
         return Matrix4x4(-rows[0], -rows[1], -rows[2], -rows[3]); 
     }
 
     // Matrix multiplication
-    Matrix4x4 operator*(const Matrix4x4& rhs) const {
+    Matrix4x4 operator*(const Matrix4x4& rhs) const noexcept
+    {
         Matrix4x4 result;
         Matrix4x4 t = rhs.transposed();
         for (int i = 0; i < 4; i++) {
@@ -240,18 +263,21 @@ public:
         return result;
     }
 
-    void operator*=(const Matrix4x4& rhs) { 
+    void operator*=(const Matrix4x4& rhs) noexcept
+    { 
         *this = *this * rhs; 
     }
 
     /**
     * Comparison operators
     */
-    bool operator==(const Matrix4x4& rhs) const {
+    bool operator==(const Matrix4x4& rhs) const noexcept
+    {
         return rows[0] == rhs.rows[0] && rows[1] == rhs.rows[1] 
             && rows[2] == rhs.rows[2] && rows[3] == rhs.rows[3];
     }
-    bool operator!=(const Matrix4x4& rhs) const { 
+    bool operator!=(const Matrix4x4& rhs) const noexcept
+    { 
         return !(*this == rhs); 
     }
 
@@ -262,7 +288,7 @@ public:
     * @param v The vector to multiply with
     * @return The resulting transformed vector
     */
-    Simd4 operator*(const Simd4& v) const
+    Simd4 operator*(const Simd4& v) const noexcept
     {
         return rows[0].dot<0xF1>(v) + rows[1].dot<0xF2>(v) + rows[2].dot<0xF4>(v) + rows[3].dot<0xF8>(v);
     }
