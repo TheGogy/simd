@@ -281,47 +281,35 @@ protected:
 
 private:
     /**
-    * Multiplies two 2x2 matrices together.
+    * Multiplies two 2x2 matrices together with optional adjugate operations.
+    * Three multiplication modes:
+    * 1. Standard:    A * B
+    * 2. Adj_a:       A' * B    (where A' is adjugate of A)
+    * 3. Adj_b:       A * B'    (where B' is adjugate of B)
     *
-    * @tparam Adj_a Whether to use adjugate of matrix a
-    * @tparam Adj_b Whether to use adjugate of matrix b
-    * @param a The first matrix to multiply
-    * @param b The second matrix to multiply
-    * @return The result of the matrix multiplication
+    * @tparam Adj_a If true, use adjugate of matrix A
+    * @tparam Adj_b If true, use adjugate of matrix B
+    * @param a First 2x2 matrix stored as [a00 a01 a10 a11]
+    * @param b Second 2x2 matrix stored as [b00 b01 b10 b11]
+    * @return Result of matrix multiplication
     */
     template <bool Adj_a = false, bool Adj_b = false>
     static inline Simd4 mat2x2_mul(const Simd4& a, const Simd4& b)
     {
-        if constexpr (Adj_a)        // A' * B
-        {
-            return (
-                    a.shuffle<_MM_SHUFFLE(0, 3, 0, 3)>()
-                  * b
-                ) - (
-                    a.shuffle<_MM_SHUFFLE(1, 2, 1, 2)>()
-                  * b.shuffle<_MM_SHUFFLE(2, 3, 0, 1)>()
-            );
+        if constexpr (Adj_a) {
+            // A' * B = [a11 -a01; -a10 a00] * B
+            return (a.shuffle<_MM_SHUFFLE(0, 3, 0, 3)>() * b                                   ) -
+                   (a.shuffle<_MM_SHUFFLE(1, 2, 1, 2)>() * b.shuffle<_MM_SHUFFLE(2, 3, 0, 1)>());
         }
-        else if constexpr (Adj_b)   // A * B'
-        {
-            return (
-                    a
-                  * b.shuffle<_MM_SHUFFLE(0, 0, 3, 3)>()
-                ) - (
-                    a.shuffle<_MM_SHUFFLE(1, 0, 3, 2)>()
-                  * b.shuffle<_MM_SHUFFLE(2, 2, 1, 1)>()
-            );
+        else if constexpr (Adj_b) {
+            // A * B' = A * [b11 -b01; -b10 b00]
+            return (a                                    * b.shuffle<_MM_SHUFFLE(0, 0, 3, 3)>()) -
+                   (a.shuffle<_MM_SHUFFLE(1, 0, 3, 2)>() * b.shuffle<_MM_SHUFFLE(2, 2, 1, 1)>());
         }
-        else                        // A * B
-        {
-            return (
-                    a
-                  * b.shuffle<_MM_SHUFFLE(3, 3, 0, 0)>()
-                ) + (
-                    a.shuffle<_MM_SHUFFLE(1, 0, 3, 2)>()
-                  * b.shuffle<_MM_SHUFFLE(2, 2, 1, 1)>()
-            );
+        else {
+            // Standard matrix multiplication A * B
+            return (a                                    * b.shuffle<_MM_SHUFFLE(3, 3, 0, 0)>()) +
+                   (a.shuffle<_MM_SHUFFLE(1, 0, 3, 2)>() * b.shuffle<_MM_SHUFFLE(2, 2, 1, 1)>());
         }
     }
 };
-
