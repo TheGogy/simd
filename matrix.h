@@ -59,25 +59,14 @@ public:
 
 
     /**
-    * Matrix multiplication operator.
+    * Constructor with direct Simd4 values.
     */
-    Matrix4x4 operator*(const Matrix4x4& rhs) const
+    Matrix4x4(Simd4 r0, Simd4 r1, Simd4 r2, Simd4 r3)
     {
-        Matrix4x4 result;
-
-        for (int i = 0; i < 4; ++i)
-        {
-            __m128 row = rows[i].data;
-
-            __m128 res = _mm_fmadd_ps(_mm_shuffle_ps(row, row, _MM_SHUFFLE(0, 0, 0, 0)), rhs.rows[0].data,
-                         _mm_fmadd_ps(_mm_shuffle_ps(row, row, _MM_SHUFFLE(1, 1, 1, 1)), rhs.rows[1].data,
-                         _mm_fmadd_ps(_mm_shuffle_ps(row, row, _MM_SHUFFLE(2, 2, 2, 2)), rhs.rows[2].data,
-                         _mm_mul_ps(  _mm_shuffle_ps(row, row, _MM_SHUFFLE(3, 3, 3, 3)), rhs.rows[3].data))));
-
-            result.rows[i].data = res;
-        }
-
-        return result;
+        rows[0] = r0;
+        rows[1] = r1;
+        rows[2] = r2;
+        rows[3] = r3;
     }
 
 
@@ -195,6 +184,78 @@ public:
 
 
     /**
+    * Arithmetic operators
+    */
+    // Scalar operations
+    Matrix4x4 operator*(float scalar) const { 
+        return Matrix4x4(rows[0] * scalar, rows[1] * scalar, 
+                        rows[2] * scalar, rows[3] * scalar); 
+    }
+    Matrix4x4 operator/(float scalar) const { 
+        float inv = 1.0f / scalar;
+        return *this * inv;
+    }
+    void operator*=(float scalar) { 
+        rows[0] *= scalar; rows[1] *= scalar; 
+        rows[2] *= scalar; rows[3] *= scalar; 
+    }
+    void operator/=(float scalar) { 
+        float inv = 1.0f / scalar;
+        *this *= inv;
+    }
+
+    // Matrix operations
+    Matrix4x4 operator+(const Matrix4x4& rhs) const { 
+        return Matrix4x4(rows[0] + rhs.rows[0], rows[1] + rhs.rows[1],
+                         rows[2] + rhs.rows[2], rows[3] + rhs.rows[3]); 
+    }
+    Matrix4x4 operator-(const Matrix4x4& rhs) const { 
+        return Matrix4x4(rows[0] - rhs.rows[0], rows[1] - rhs.rows[1],
+                         rows[2] - rhs.rows[2], rows[3] - rhs.rows[3]); 
+    }
+    void operator+=(const Matrix4x4& rhs) { 
+        rows[0] += rhs.rows[0]; rows[1] += rhs.rows[1];
+        rows[2] += rhs.rows[2]; rows[3] += rhs.rows[3];
+    }
+    void operator-=(const Matrix4x4& rhs) { 
+        rows[0] -= rhs.rows[0]; rows[1] -= rhs.rows[1];
+        rows[2] -= rhs.rows[2]; rows[3] -= rhs.rows[3];
+    }
+
+    // Unary operators
+    Matrix4x4 operator-() const { 
+        return Matrix4x4(-rows[0], -rows[1], -rows[2], -rows[3]); 
+    }
+
+    // Matrix multiplication
+    Matrix4x4 operator*(const Matrix4x4& rhs) const {
+        Matrix4x4 result;
+        Matrix4x4 t = rhs.transposed();
+        for (int i = 0; i < 4; i++) {
+            result.rows[i] = rows[i].dot<0xF1>(t.rows[0])
+                           + rows[i].dot<0xF2>(t.rows[1])
+                           + rows[i].dot<0xF4>(t.rows[2])
+                           + rows[i].dot<0xF8>(t.rows[3]);
+        }
+        return result;
+    }
+
+    void operator*=(const Matrix4x4& rhs) { 
+        *this = *this * rhs; 
+    }
+
+    /**
+    * Comparison operators
+    */
+    bool operator==(const Matrix4x4& rhs) const {
+        return rows[0] == rhs.rows[0] && rows[1] == rhs.rows[1] 
+            && rows[2] == rhs.rows[2] && rows[3] == rhs.rows[3];
+    }
+    bool operator!=(const Matrix4x4& rhs) const { 
+        return !(*this == rhs); 
+    }
+
+    /**
     * Multiplies the matrix by a Simd4 vector.
     * Performs the multiplication M * v where M is this matrix and v is the vector.
     * 
@@ -203,12 +264,7 @@ public:
     */
     Simd4 operator*(const Simd4& v) const
     {
-        __m128 result = _mm_fmadd_ps(_mm_shuffle_ps(v.data, v.data, _MM_SHUFFLE(0, 0, 0, 0)), rows[0].data,
-                        _mm_fmadd_ps(_mm_shuffle_ps(v.data, v.data, _MM_SHUFFLE(1, 1, 1, 1)), rows[1].data,
-                        _mm_fmadd_ps(_mm_shuffle_ps(v.data, v.data, _MM_SHUFFLE(2, 2, 2, 2)), rows[2].data,
-                        _mm_mul_ps(  _mm_shuffle_ps(v.data, v.data, _MM_SHUFFLE(3, 3, 3, 3)), rows[3].data))));
-        
-        return Simd4(result);
+        return rows[0].dot<0xF1>(v) + rows[1].dot<0xF2>(v) + rows[2].dot<0xF4>(v) + rows[3].dot<0xF8>(v);
     }
 
 
@@ -268,3 +324,4 @@ private:
         }
     }
 };
+
