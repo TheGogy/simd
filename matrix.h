@@ -1,9 +1,8 @@
-/*
-*   matrix.h
+/**
+*   @file matrix.h
+*   @brief This file contains a simple implementation of a 4x4 matrix class.
 *
-*   REQUIRED FLAGS: -std=c++20 -mfma -msse4.1
-*
-*   A simple implementation of a 4x4 matrix class.
+*   @info REQUIRED FLAGS: -std=c++20 -mfma -msse4.1
 */
 
 #pragma once
@@ -12,12 +11,17 @@
 #include <cassert>
 #include <xmmintrin.h>
 #include <iostream>
+
+
 #include "simd.h"
 
+
 /**
-* Matrix4x4 class for SIMD-optimized 4x4 matrix operations.
+* @class Matrix4x4
+* @brief SIMD-optimized 4x4 matrix operations.
 */
-class Matrix4x4 {
+class Matrix4x4
+{
 public:
     /**
     * Default constructor - identity matrix.
@@ -84,11 +88,11 @@ public:
         const Simd4 D = shuffle_2323(rows[2], rows[3]);
 
         const Simd4 det_X = (
-                rows[0].shuffle<_MM_SHUFFLE(2, 0, 2, 0)>(rows[2])
-              * rows[1].shuffle<_MM_SHUFFLE(3, 1, 3, 1)>(rows[3])
-            ) - (
-                rows[0].shuffle<_MM_SHUFFLE(3, 1, 3, 1)>(rows[2])
-              * rows[1].shuffle<_MM_SHUFFLE(2, 0, 2, 0)>(rows[3])
+            rows[0].shuffle<_MM_SHUFFLE(2, 0, 2, 0)>(rows[2])
+            * rows[1].shuffle<_MM_SHUFFLE(3, 1, 3, 1)>(rows[3])
+        ) - (
+            rows[0].shuffle<_MM_SHUFFLE(3, 1, 3, 1)>(rows[2])
+            * rows[1].shuffle<_MM_SHUFFLE(2, 0, 2, 0)>(rows[3])
         );
 
         const Simd4 det_A = det_X.cast_shuffle<_MM_SHUFFLE(0, 0, 0, 0)>();
@@ -182,7 +186,7 @@ public:
         return rows[index / 4][index % 4];
     }
 
-    
+
     /**
     * Gets a value at a specific index of the matrix.
     * @param row The row of the value to get
@@ -199,21 +203,21 @@ public:
     /**
     * Arithmetic operators
     */
-    // Scalar operations
     Matrix4x4 operator*(float scalar) const noexcept
     { 
         return Matrix4x4(rows[0] * scalar, rows[1] * scalar, 
-                        rows[2] * scalar, rows[3] * scalar); 
-    }
-    Matrix4x4 operator/(float scalar) const noexcept
-    { 
-        float inv = 1.0f / scalar;
-        return *this * inv;
+                         rows[2] * scalar, rows[3] * scalar); 
     }
     void operator*=(float scalar) noexcept
     { 
         rows[0] *= scalar; rows[1] *= scalar; 
         rows[2] *= scalar; rows[3] *= scalar; 
+    }
+
+    Matrix4x4 operator/(float scalar) const noexcept
+    { 
+        float inv = 1.0f / scalar;
+        return *this * inv;
     }
     void operator/=(float scalar) noexcept
     { 
@@ -221,21 +225,21 @@ public:
         *this *= inv;
     }
 
-    // Matrix operations
     Matrix4x4 operator+(const Matrix4x4& rhs) const noexcept
     { 
         return Matrix4x4(rows[0] + rhs.rows[0], rows[1] + rhs.rows[1],
                          rows[2] + rhs.rows[2], rows[3] + rhs.rows[3]); 
     }
-    Matrix4x4 operator-(const Matrix4x4& rhs) const noexcept
-    { 
-        return Matrix4x4(rows[0] - rhs.rows[0], rows[1] - rhs.rows[1],
-                         rows[2] - rhs.rows[2], rows[3] - rhs.rows[3]); 
-    }
     void operator+=(const Matrix4x4& rhs) noexcept
     { 
         rows[0] += rhs.rows[0]; rows[1] += rhs.rows[1];
         rows[2] += rhs.rows[2]; rows[3] += rhs.rows[3];
+    }
+
+    Matrix4x4 operator-(const Matrix4x4& rhs) const noexcept
+    { 
+        return Matrix4x4(rows[0] - rhs.rows[0], rows[1] - rhs.rows[1],
+                         rows[2] - rhs.rows[2], rows[3] - rhs.rows[3]); 
     }
     void operator-=(const Matrix4x4& rhs) noexcept
     { 
@@ -256,9 +260,9 @@ public:
         Matrix4x4 t = rhs.transposed();
         for (int i = 0; i < 4; i++) {
             result.rows[i] = rows[i].dot<0xF1>(t.rows[0])
-                           + rows[i].dot<0xF2>(t.rows[1])
-                           + rows[i].dot<0xF4>(t.rows[2])
-                           + rows[i].dot<0xF8>(t.rows[3]);
+                + rows[i].dot<0xF2>(t.rows[1])
+                + rows[i].dot<0xF4>(t.rows[2])
+                + rows[i].dot<0xF8>(t.rows[3]);
         }
         return result;
     }
@@ -274,7 +278,7 @@ public:
     bool operator==(const Matrix4x4& rhs) const noexcept
     {
         return rows[0] == rhs.rows[0] && rows[1] == rhs.rows[1] 
-            && rows[2] == rhs.rows[2] && rows[3] == rhs.rows[3];
+        && rows[2] == rhs.rows[2] && rows[3] == rhs.rows[3];
     }
     bool operator!=(const Matrix4x4& rhs) const noexcept
     { 
@@ -325,17 +329,17 @@ private:
         if constexpr (Adj_a) {
             // A' * B = [a11 -a01; -a10 a00] * B
             return (a.shuffle<_MM_SHUFFLE(0, 3, 0, 3)>() * b                                   ) -
-                   (a.shuffle<_MM_SHUFFLE(1, 2, 1, 2)>() * b.shuffle<_MM_SHUFFLE(2, 3, 0, 1)>());
+            (a.shuffle<_MM_SHUFFLE(1, 2, 1, 2)>() * b.shuffle<_MM_SHUFFLE(2, 3, 0, 1)>());
         }
         else if constexpr (Adj_b) {
             // A * B' = A * [b11 -b01; -b10 b00]
             return (a                                    * b.shuffle<_MM_SHUFFLE(0, 0, 3, 3)>()) -
-                   (a.shuffle<_MM_SHUFFLE(1, 0, 3, 2)>() * b.shuffle<_MM_SHUFFLE(2, 2, 1, 1)>());
+            (a.shuffle<_MM_SHUFFLE(1, 0, 3, 2)>() * b.shuffle<_MM_SHUFFLE(2, 2, 1, 1)>());
         }
         else {
             // Standard matrix multiplication A * B
             return (a                                    * b.shuffle<_MM_SHUFFLE(3, 3, 0, 0)>()) +
-                   (a.shuffle<_MM_SHUFFLE(1, 0, 3, 2)>() * b.shuffle<_MM_SHUFFLE(2, 2, 1, 1)>());
+            (a.shuffle<_MM_SHUFFLE(1, 0, 3, 2)>() * b.shuffle<_MM_SHUFFLE(2, 2, 1, 1)>());
         }
     }
 };

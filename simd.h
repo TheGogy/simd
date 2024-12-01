@@ -1,9 +1,9 @@
-/*
-*   simd.h
+/**
+*   @file simd.h
+*   @brief This file contains a simple wrapper around __m256d for SIMD operations on four-element vectors.
 *
-*   REQUIRED FLAGS: -std=c++20 -mfma -msse4.1
+*   @info REQUIRED FLAGS: -std=c++20 -mfma -msse4.1
 *
-*   A simple wrapper around __m256d for SIMD operations on four-element vectors.
 *   This class supports:
 *   - arithmetic operations (+, -, *, /)
 *   - bitwise operations    (&, |, ^, ~)
@@ -30,11 +30,11 @@
 
 
 /**
- * @class Simd4
- * @brief Simple wrapper class around __m128.
- *
- */
-class Simd4 {
+* @class Simd4
+* @brief Simple wrapper class around __m128.
+*/
+class Simd4
+{
 public:
     __m128 data;
 
@@ -56,14 +56,15 @@ public:
     static Simd4 minus_one()        { return Simd4(-1.0); }
     static Simd4 half()             { return Simd4(0.5f); }
     static Simd4 adj_mask()         { return Simd4(_mm_setr_ps(1.0, -1.0, -1.0, 1.0)); }
+    static Simd4 sign_mask()        { return Simd4(_mm_castsi128_ps(_mm_set1_epi32(0x80000000))); }
+    static Simd4 all_bits_set()     { return Simd4(_mm_castsi128_ps(_mm_set1_epi32(-1))); }
+    static Simd4 abs_mask()         { return Simd4(_mm_castsi128_ps(_mm_set1_epi32(0x7FFFFFFF))); }
     static Simd4 infinity()         { return Simd4(std::numeric_limits<float>::infinity()); }
     static Simd4 epsilon()          { return Simd4(std::numeric_limits<float>::epsilon()); }
     static Simd4 max()              { return Simd4(std::numeric_limits<float>::max()); }
     static Simd4 min()              { return Simd4(std::numeric_limits<float>::min()); }
     static Simd4 nan()              { return Simd4(std::numeric_limits<float>::quiet_NaN()); }
     static Simd4 negative_zero()    { return Simd4(-0); }
-    static Simd4 sign_mask()        { return Simd4(_mm_castsi128_ps(_mm_set1_epi32(0x80000000))); }
-    static Simd4 all_bits_set()     { return Simd4(_mm_castsi128_ps(_mm_set1_epi32(-1))); }
     static Simd4 pi()               { return Simd4(std::numbers::pi); }
     static Simd4 inv_pi()           { return Simd4(std::numbers::inv_pi); }
     static Simd4 half_pi()          { return Simd4(1.57079632679489661923); }
@@ -77,6 +78,15 @@ public:
 
     static Simd4 reflection()       { return Simd4(-1.0, 1.0, 0.0, 0.0); }
 
+
+    /**
+    * Computes the absolute value of the Simd4
+    */
+    Simd4 abs() const noexcept
+    {
+        return *this & abs_mask();
+    }
+
     /**
     * Sets the item at the given index to the given value.
     *
@@ -88,6 +98,20 @@ public:
     {
         static_assert(Index >= 0 && Index < 4, "Simd4::set(): Index out of bounds");
         data = _mm_insert_ps(data, _mm_set_ss(val_), Index << 4);
+    }
+
+
+    /**
+    * Sets the item at the given index to the given value.
+    *
+    * @tparam Index The index
+    * @param val The value
+    */
+    template <int Index>
+    Simd4 with_set(float val_) const noexcept
+    {
+        static_assert(Index >= 0 && Index < 4, "Simd4::with_set(): Index out of bounds");
+        return Simd4(_mm_insert_ps(data, _mm_set_ss(val_), Index << 4));
     }
 
 
@@ -399,6 +423,18 @@ public:
     {
         const __m128 cmp = _mm_cmpneq_ps(data, _mm_setzero_ps());
         return _mm_movemask_ps(cmp) == 0;
+    }
+
+
+    /**
+    * Tests to see if any value is NaN.
+    *
+    * @return Whether any value is NaN.
+    */
+    bool contains_nan() const noexcept
+    {
+        const __m128 cmp = _mm_cmpneq_ps(data, data);
+        return _mm_movemask_ps(cmp) != 0;
     }
 
 
