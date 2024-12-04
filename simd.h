@@ -627,8 +627,6 @@ public:
     Simd4 operator^(const Simd4& other) const noexcept { return Simd4(_mm_xor_ps(data, other.data)); }
     Simd4 operator~() const noexcept { return Simd4(_mm_andnot_ps(data, _mm_set1_ps(-1.0f))); }
 
-    explicit operator bool() const noexcept { return !is_zero(); }
-
     /**
     * Comparison operators
     */
