@@ -268,27 +268,64 @@ public:
     }
 
     void operator*=(const Matrix4x4& rhs) noexcept
-    { 
-        *this = *this * rhs; 
+    {
+        *this = *this * rhs;
     }
 
     /**
-    * Comparison operators
+    * Comparison operators - equal
+    *
+    * @note To see if two matrices are equal (as in boolean):
+    *       (mat_a == mat_b).all_one()
     */
-    bool operator==(const Matrix4x4& rhs) const noexcept
+    Matrix4x4 operator==(const Matrix4x4& rhs) const noexcept
     {
-        return rows[0] == rhs.rows[0] && rows[1] == rhs.rows[1] 
-        && rows[2] == rhs.rows[2] && rows[3] == rhs.rows[3];
+        return Matrix4x4(
+            rows[0] == rhs.rows[0],
+            rows[1] == rhs.rows[1],
+            rows[2] == rhs.rows[2],
+            rows[3] == rhs.rows[3]
+        );
     }
-    bool operator!=(const Matrix4x4& rhs) const noexcept
-    { 
-        return !(*this == rhs); 
+
+
+    Matrix4x4 operator!=(const Matrix4x4& rhs) const noexcept
+    {
+        return Matrix4x4(
+            rows[0] != rhs.rows[0],
+            rows[1] != rhs.rows[1],
+            rows[2] != rhs.rows[2],
+            rows[3] != rhs.rows[3]
+        );
     }
+
+
+    /**
+    * See if all bits are set to 1.
+    *
+    * @return True if all bits are set to 1.
+    */
+    bool all_one() const noexcept
+    {
+        return rows[0].all_one() && rows[1].all_one() && rows[2].all_one() && rows[3].all_one();
+    }
+
+
+    /**
+    * See if all bits are set to 0.
+    *
+    * @return True if all bits are set to 0.
+    */
+    bool all_zero() const noexcept
+    {
+        return rows[0].all_zero() && rows[1].all_zero() && rows[2].all_zero() && rows[3].all_zero();
+    }
+
 
     /**
     * Multiplies the matrix by a Simd4 vector.
     * Performs the multiplication M * v where M is this matrix and v is the vector.
-    * 
+    *
     * @param v The vector to multiply with
     * @return The resulting transformed vector
     */

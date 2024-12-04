@@ -419,10 +419,22 @@ public:
     *
     * @return Whether all elements are set to 0.
     */
-    bool is_zero() const noexcept
+    bool all_zero() const noexcept
     {
-        const __m128 cmp = _mm_cmpneq_ps(data, _mm_setzero_ps());
-        return _mm_movemask_ps(cmp) == 0;
+        const __m128i int_v = as_m128i();
+        return _mm_testz_si128(int_v, int_v);
+    }
+
+
+    /**
+    * Tests to see if all bits are set to 1.
+    *
+    * @return Whether all bits are set to 1.
+    */
+    bool all_one() const noexcept
+    {
+        const int mask = _mm_movemask_ps(data);
+        return mask == 0xF;
     }
 
 
@@ -627,8 +639,14 @@ public:
     Simd4 operator^(const Simd4& other) const noexcept { return Simd4(_mm_xor_ps(data, other.data)); }
     Simd4 operator~() const noexcept { return Simd4(_mm_andnot_ps(data, _mm_set1_ps(-1.0f))); }
 
+
     /**
     * Comparison operators
+    *
+    * @note These will return a Simd4. This is useful to show which elements are different,
+    *       but cannot directly be used as a boolean.
+    *       In order to do that, you should use the following:
+    *       (simd4_a == simd4_b).all_one()
     */
     Simd4 operator==(const Simd4& other) const noexcept { return Simd4(_mm_cmpeq_ps(data, other.data)); }
     Simd4 operator!=(const Simd4& other) const noexcept { return Simd4(_mm_cmpneq_ps(data, other.data)); }
