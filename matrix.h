@@ -267,10 +267,10 @@ public:
         Matrix4x4 result;
         Matrix4x4 t = rhs.transposed();
         for (int i = 0; i < 4; i++) {
-            result.rows[i] = rows[i].dot<0xF1>(t.rows[0])
-                           + rows[i].dot<0xF2>(t.rows[1])
-                           + rows[i].dot<0xF4>(t.rows[2])
-                           + rows[i].dot<0xF8>(t.rows[3]);
+            result.rows[i] = rows[i].dot_as_simd4<0xF1>(t.rows[0])
+                           + rows[i].dot_as_simd4<0xF2>(t.rows[1])
+                           + rows[i].dot_as_simd4<0xF4>(t.rows[2])
+                           + rows[i].dot_as_simd4<0xF8>(t.rows[3]);
         }
         return result;
     }
@@ -373,7 +373,10 @@ public:
     */
     Simd4 operator*(const Simd4& v) const noexcept
     {
-        return rows[0].dot<0xF1>(v) + rows[1].dot<0xF2>(v) + rows[2].dot<0xF4>(v) + rows[3].dot<0xF8>(v);
+        return rows[0].dot_as_simd4<0xF1>(v) 
+             + rows[1].dot_as_simd4<0xF2>(v) 
+             + rows[2].dot_as_simd4<0xF4>(v) 
+             + rows[3].dot_as_simd4<0xF8>(v);
     }
 
 

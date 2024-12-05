@@ -389,7 +389,7 @@ public:
     * @return The output of the dot product.
     */
     template <int Mask>
-    Simd4 dot() const noexcept
+    Simd4 dot_as_simd4() const noexcept
     {
         return Simd4(_mm_dp_ps(data, data, Mask));
     }
@@ -403,7 +403,7 @@ public:
     * @return The output of the dot product.
     */
     template <int Mask>
-    Simd4 dot(const Simd4& other) const noexcept
+    Simd4 dot_as_simd4(const Simd4& other) const noexcept
     {
         return Simd4(_mm_dp_ps(data, other.data, Mask));
     }
