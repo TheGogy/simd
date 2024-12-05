@@ -227,24 +227,32 @@ public:
 
     Matrix4x4 operator+(const Matrix4x4& rhs) const noexcept
     { 
-        return Matrix4x4(rows[0] + rhs.rows[0], rows[1] + rhs.rows[1],
-                         rows[2] + rhs.rows[2], rows[3] + rhs.rows[3]); 
+        return Matrix4x4(rows[0] + rhs.rows[0], 
+                         rows[1] + rhs.rows[1],
+                         rows[2] + rhs.rows[2], 
+                         rows[3] + rhs.rows[3]); 
     }
     void operator+=(const Matrix4x4& rhs) noexcept
     { 
-        rows[0] += rhs.rows[0]; rows[1] += rhs.rows[1];
-        rows[2] += rhs.rows[2]; rows[3] += rhs.rows[3];
+        rows[0] += rhs.rows[0]; 
+        rows[1] += rhs.rows[1];
+        rows[2] += rhs.rows[2]; 
+        rows[3] += rhs.rows[3];
     }
 
     Matrix4x4 operator-(const Matrix4x4& rhs) const noexcept
     { 
-        return Matrix4x4(rows[0] - rhs.rows[0], rows[1] - rhs.rows[1],
-                         rows[2] - rhs.rows[2], rows[3] - rhs.rows[3]); 
+        return Matrix4x4(rows[0] - rhs.rows[0], 
+                         rows[1] - rhs.rows[1],
+                         rows[2] - rhs.rows[2], 
+                         rows[3] - rhs.rows[3]); 
     }
     void operator-=(const Matrix4x4& rhs) noexcept
     { 
-        rows[0] -= rhs.rows[0]; rows[1] -= rhs.rows[1];
-        rows[2] -= rhs.rows[2]; rows[3] -= rhs.rows[3];
+        rows[0] -= rhs.rows[0];
+        rows[1] -= rhs.rows[1];
+        rows[2] -= rhs.rows[2];
+        rows[3] -= rhs.rows[3];
     }
 
     // Unary operators
@@ -260,9 +268,9 @@ public:
         Matrix4x4 t = rhs.transposed();
         for (int i = 0; i < 4; i++) {
             result.rows[i] = rows[i].dot<0xF1>(t.rows[0])
-                + rows[i].dot<0xF2>(t.rows[1])
-                + rows[i].dot<0xF4>(t.rows[2])
-                + rows[i].dot<0xF8>(t.rows[3]);
+                           + rows[i].dot<0xF2>(t.rows[1])
+                           + rows[i].dot<0xF4>(t.rows[2])
+                           + rows[i].dot<0xF8>(t.rows[3]);
         }
         return result;
     }
@@ -275,8 +283,8 @@ public:
     /**
     * Comparison operators - equal
     *
-    * @note To see if two matrices are equal (as in boolean):
-    *       (mat_a == mat_b).all_one()
+    * @note To see if two matrices are equal:
+    *       Matrix4x4::is_eq(a, b)
     */
     Matrix4x4 operator==(const Matrix4x4& rhs) const noexcept
     {
@@ -289,6 +297,12 @@ public:
     }
 
 
+    /**
+    * Comparison operators - not equal
+    *
+    * @note To see if two matrices are not equal:
+    *       !Matrix4x4::is_eq(a, b)
+    */
     Matrix4x4 operator!=(const Matrix4x4& rhs) const noexcept
     {
         return Matrix4x4(
@@ -297,6 +311,34 @@ public:
             rows[2] != rhs.rows[2],
             rows[3] != rhs.rows[3]
         );
+    }
+
+
+    /**
+    * See if two matrices are equal.
+    *
+    * @return True if the matrices are equal.
+    */
+    bool is_eq(const Matrix4x4& rhs) const noexcept
+    {
+        return Simd4::is_eq(rows[0], rhs.rows[0]) &&
+               Simd4::is_eq(rows[1], rhs.rows[1]) &&
+               Simd4::is_eq(rows[2], rhs.rows[2]) &&
+               Simd4::is_eq(rows[3], rhs.rows[3]);
+    }
+
+
+    /**
+    * See if two matrices are approximately equal.
+    *
+    * @return True if the matrices are approximately equal.
+    */
+    bool is_approx_eq(const Matrix4x4& rhs, float epsilon) const noexcept
+    {
+        return Simd4::is_approx_eq(rows[0], rhs.rows[0], epsilon) &&
+               Simd4::is_approx_eq(rows[1], rhs.rows[1], epsilon) &&
+               Simd4::is_approx_eq(rows[2], rhs.rows[2], epsilon) &&
+               Simd4::is_approx_eq(rows[3], rhs.rows[3], epsilon);
     }
 
 

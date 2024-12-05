@@ -10,6 +10,7 @@
 *   - square root, reciprocal square root, reciprocal
 *   - dot product, cross product
 *   - sum, hmax, hmin
+*   - fused multiply-add, fused multiply-subtract, fused negative multiply-add
 *   - horizontal addition / subtraction
 *   - element wise minimum / maximum
 *   - element wise greater than / less than
@@ -29,6 +30,11 @@
 #include <ostream>
 
 
+#if !defined(__SSE__) && !defined(__AVX__)
+    #error "SSE or AVX instruction set is required"
+#endif
+
+
 /**
 * @class Simd4
 * @brief Simple wrapper class around __m128.
@@ -46,6 +52,9 @@ public:
     explicit Simd4(__m128 v) : data(v) {}
     explicit Simd4(float a)  : data(_mm_set1_ps(a)) {}
     explicit Simd4(float x, float y, float z, float w) : data(_mm_set_ps(w, z, y, x)) {}
+
+    static Simd4 from_aligned(const std::array<float, 4>& arr) { return Simd4(_mm_load_ps(arr.data())); }
+    static Simd4 from_aligned(const float* ptr) { return Simd4(_mm_load_ps(ptr)); }
 
 
     /**
@@ -74,7 +83,7 @@ public:
     static Simd4 unit_x()           { return Simd4(1.0, 0.0, 0.0, 0.0); }
     static Simd4 unit_y()           { return Simd4(0.0, 1.0, 0.0, 0.0); }
     static Simd4 unit_z()           { return Simd4(0.0, 0.0, 1.0, 0.0); }
-    static Simd4 unit_w()           { return Simd4(0.0, 0.0, 1.0, 1.0); }
+    static Simd4 unit_w()           { return Simd4(0.0, 0.0, 0.0, 1.0); }
 
     static Simd4 reflection()       { return Simd4(-1.0, 1.0, 0.0, 0.0); }
 
@@ -349,29 +358,6 @@ public:
     /**
     * Calculates the dot product of the vector with itself.
     *
-    * @return The output of the dot product.
-    */
-    float dot() const noexcept
-    {
-        return _mm_cvtss_f32(_mm_dp_ps(data, data, 0x71));
-    }
-
-
-    /**
-    * Calculates the dot product of the vector with another.
-    *
-    * @param other The other vector to calculate the dot product with.
-    * @return The output of the dot product.
-    */
-    float dot(const Simd4& other) const noexcept
-    {
-        return _mm_cvtss_f32(_mm_dp_ps(data, other.data, 0x71));
-    }
-
-
-    /**
-    * Calculates the dot product of the vector with itself.
-    *
     * @tparam Mask The mask to use for the dot product.
     * @return The output of the dot product.
     */
@@ -427,6 +413,18 @@ public:
 
 
     /**
+    * Tests to see if any value is 0.
+    *
+    * @return Whether any value is 0.
+    */
+    bool any_zero() const noexcept
+    {
+        const __m128i int_v = as_m128i();
+        return _mm_testc_si128(int_v, int_v);
+    }
+
+
+    /**
     * Tests to see if all bits are set to 1.
     *
     * @return Whether all bits are set to 1.
@@ -435,6 +433,18 @@ public:
     {
         const int mask = _mm_movemask_ps(data);
         return mask == 0xF;
+    }
+
+
+    /**
+    * Tests to see if any value is 1.
+    *
+    * @return Whether any value is 1.
+    */
+    bool any_one() const noexcept
+    {
+        const int mask = _mm_movemask_ps(data);
+        return mask != 0;
     }
 
 
@@ -460,9 +470,20 @@ public:
     */
     std::array<float, 4> as_arr() const noexcept
     {
-        alignas(16) std::array<float, 4> elements;
-        _mm_store_ps(elements.data(), data);
+        std::array<float, 4> elements;
+        _mm_storeu_ps(elements.data(), data);
         return elements;
+    }
+
+
+    /**
+    * @brief Stores the vector to an aligned memory location.
+    *
+    * @param ptr The pointer to store the vector to.
+    */
+    void store_aligned(float* ptr) const noexcept
+    {
+        _mm_store_ps(ptr, data);
     }
 
 
@@ -476,7 +497,7 @@ public:
     */
     std::array<int, 4> as_arr_int() const noexcept
     {
-        alignas(16) std::array<int, 4> elements;
+        std::array<int, 4> elements;
         _mm_storeu_si128(reinterpret_cast<__m128i*>(elements.data()), as_m128i());
         return elements;
     }
@@ -541,6 +562,33 @@ public:
     static Simd4 hsub(const Simd4& a, const Simd4& b) noexcept
     {
         return Simd4(_mm_hsub_ps(a.data, b.data));
+    }
+
+
+    /**
+    * @brief Performs fused multiply-add: (this * a) + b
+    */
+    Simd4 fmadd(const Simd4& a, const Simd4& b) const noexcept
+    {
+        return Simd4(_mm_fmadd_ps(data, a.data, b.data));
+    }
+
+
+    /**
+    * @brief Performs fused multiply-subtract: (this * a) - b
+    */
+    Simd4 fmsub(const Simd4& a, const Simd4& b) const noexcept
+    {
+        return Simd4(_mm_fmsub_ps(data, a.data, b.data));
+    }
+
+
+    /**
+    * @brief Performs fused negative multiply-add: -(this * a) + b
+    */
+    Simd4 fnmadd(const Simd4& a, const Simd4& b) const noexcept
+    {
+        return Simd4(_mm_fnmadd_ps(data, a.data, b.data));
     }
 
 
@@ -646,7 +694,7 @@ public:
     * @note These will return a Simd4. This is useful to show which elements are different,
     *       but cannot directly be used as a boolean.
     *       In order to do that, you should use the following:
-    *       (simd4_a == simd4_b).all_one()
+    *       Simd4::is_eq(a, b)
     */
     Simd4 operator==(const Simd4& other) const noexcept { return Simd4(_mm_cmpeq_ps(data, other.data)); }
     Simd4 operator!=(const Simd4& other) const noexcept { return Simd4(_mm_cmpneq_ps(data, other.data)); }
