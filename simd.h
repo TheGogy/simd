@@ -358,11 +358,13 @@ public:
     /**
     * Calculates the dot product of the vector with itself.
     *
+    * @tparam Mask The mask to use for the dot product (default is 0b0111 -> dp of first 3 elements).
     * @return The output of the dot product.
     */
+    template <int Mask = 0b0111>
     float dot() const noexcept
     {
-        return _mm_cvtss_f32(_mm_dp_ps(data, data, 0x71));
+        return _mm_cvtss_f32(_mm_dp_ps(data, data, (Mask << 4) | 0x01));
     }
 
 
@@ -370,11 +372,13 @@ public:
     * Calculates the dot product of the vector with another.
     *
     * @param other The other vector to calculate the dot product with.
+    * @tparam Mask The mask to use for the dot product (default is 0b0111 -> dp of first 3 elements).
     * @return The output of the dot product.
     */
+    template <int Mask = 0b0111>
     float dot(const Simd4& other) const noexcept
     {
-        return _mm_cvtss_f32(_mm_dp_ps(data, other.data, 0x71));
+        return _mm_cvtss_f32(_mm_dp_ps(data, other.data, (Mask << 4) | 0x01));
     }
 
 
