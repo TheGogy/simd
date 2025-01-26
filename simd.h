@@ -358,6 +358,10 @@ public:
     /**
     * Calculates the dot product of the vector with itself.
     *
+    * Simd4 x(1, 2, 3, 4);
+    * x.dot()         -> 1*1 + 2*2 + 3*3 = 14
+    * x.dot<0b1111>() -> 1*1 + 2*2 + 3*3 + 4*4 = 30
+    *
     * @tparam Mask The mask to use for the dot product (default is 0b0111 -> dp of first 3 elements).
     * @return The output of the dot product.
     */
@@ -371,6 +375,11 @@ public:
     /**
     * Calculates the dot product of the vector with another.
     *
+    * Simd4 x(1, 2, 3, 4);
+    * Simd4 y(5, 6, 7, 8);
+    * x.dot(y)         -> 1*5 + 2*6 + 3*7 = 38
+    * x.dot<0b1111>(y) -> 1*5 + 2*6 + 3*7 + 4*8 = 70
+    *
     * @param other The other vector to calculate the dot product with.
     * @tparam Mask The mask to use for the dot product (default is 0b0111 -> dp of first 3 elements).
     * @return The output of the dot product.
@@ -383,29 +392,43 @@ public:
 
 
     /**
-    * Calculates the dot product of the vector with itself.
+    * Calculates the dot product of the vector with itself and outputs to a simd
+    * vector.
     *
-    * @tparam Mask The mask to use for the dot product.
+    * Simd4 x(1, 2, 3, 4);
+    * x.dot_as_simd4()                 -> Simd4(14, 14, 14, 14);
+    * x.dot_as_simd4<0b1111>()         -> Simd4(30, 30, 30, 30);
+    * x.dot_as_simd4<0b1111, 0b0011>() -> Simd4(30, 30, 0, 0);
+    *
+    * @tparam InputMask The input mask to use for the dot product.
+    * @tparam OutputMask The output mask to use for the dot product. (flipped)
     * @return The output of the dot product.
     */
-    template <int Mask>
+    template <int InputMask = 0b0111, int OutputMask = 0b1111>
     Simd4 dot_as_simd4() const noexcept
     {
-        return Simd4(_mm_dp_ps(data, data, Mask));
+        return Simd4(_mm_dp_ps(data, data, (InputMask << 4) | OutputMask));
     }
 
 
     /**
     * Calculates the dot product of the vector with another.
     *
-    * @tparam Mask The mask to use for the dot product.
+    * Simd4 x(1, 2, 3, 4);
+    * Simd4 y(5, 6, 7, 8);
+    * x.dot_as_simd4(y)                 -> Simd4(38, 38, 38, 38);
+    * x.dot_as_simd4<0b1111>(y)         -> Simd4(70, 70, 70, 70);
+    * x.dot_as_simd4<0b1111, 0b0011>(y) -> Simd4(70, 70, 0, 0);
+    *
+    * @tparam InputMask The input mask to use for the dot product.
+    * @tparam OutputMask The output mask to use for the dot product.
     * @param other The other vector to calculate the dot product with.
     * @return The output of the dot product.
     */
-    template <int Mask>
+    template <int InputMask = 0b0111, int OutputMask = 0b1111>
     Simd4 dot_as_simd4(const Simd4& other) const noexcept
     {
-        return Simd4(_mm_dp_ps(data, other.data, Mask));
+        return Simd4(_mm_dp_ps(data, data, (InputMask << 4) | OutputMask));
     }
 
 
@@ -417,10 +440,8 @@ public:
     */
     const Simd4 cross_prod(const Simd4& other) const noexcept
     {
-        Simd4 tmp0 = other.shuffle<_MM_SHUFFLE(3, 0, 2, 1)>();
-        Simd4 tmp1 =       shuffle<_MM_SHUFFLE(3, 0, 2, 1)>();
-        tmp0 *= *this;
-        tmp1 *= other;
+        Simd4 tmp0 = other.shuffle<_MM_SHUFFLE(3, 0, 2, 1)>() * *this;
+        Simd4 tmp1 =       shuffle<_MM_SHUFFLE(3, 0, 2, 1)>() * other;
         const Simd4 tmp2 = tmp0 - tmp1;
         return tmp2.shuffle<_MM_SHUFFLE(3, 0, 2, 1)>();
     }
