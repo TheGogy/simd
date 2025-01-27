@@ -24,10 +24,13 @@
 
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <immintrin.h>
 #include <limits>
+#include <math.h>
 #include <numbers>
 #include <ostream>
+#include <smmintrin.h>
 
 
 #if !defined(__SSE__) && !defined(__AVX__)
@@ -614,29 +617,35 @@ public:
 
 
     /**
-    * @brief Performs fused multiply-add: (this * a) + b
+    * @brief Performs fused multiply-add: (a * b) + c
+    *
+    * @param a, b, c The vectors to fmadd.
     */
-    Simd4 fmadd(const Simd4& a, const Simd4& b) const noexcept
+    static Simd4 fmadd(const Simd4& a, const Simd4& b, const Simd4& c) noexcept
     {
-        return Simd4(_mm_fmadd_ps(data, a.data, b.data));
+        return Simd4(_mm_fmadd_ps(a.data, b.data, c.data));
     }
 
 
     /**
-    * @brief Performs fused multiply-subtract: (this * a) - b
+    * @brief Performs fused multiply-subtract: (a * b) - c
+    *
+    * @param a, b, c The vectors to fmadd.
     */
-    Simd4 fmsub(const Simd4& a, const Simd4& b) const noexcept
+    static Simd4 fmsub(const Simd4& a, const Simd4& b, const Simd4& c) noexcept
     {
-        return Simd4(_mm_fmsub_ps(data, a.data, b.data));
+        return Simd4(_mm_fmsub_ps(a.data, b.data, c.data));
     }
 
 
     /**
-    * @brief Performs fused negative multiply-add: -(this * a) + b
+    * @brief Performs fused negative multiply-add: -(a * b) + c
+    *
+    * @param a, b, c The vectors to fmadd.
     */
-    Simd4 fnmadd(const Simd4& a, const Simd4& b) const noexcept
+    static Simd4 fnmadd(const Simd4& a, const Simd4& b, const Simd4& c) noexcept
     {
-        return Simd4(_mm_fnmadd_ps(data, a.data, b.data));
+        return Simd4(_mm_fnmadd_ps(a.data, b.data, c.data));
     }
 
 
@@ -696,6 +705,14 @@ public:
         return Simd4(_mm_blendv_ps(b.data, a.data, mask.data));
     }
 
+    // clang-format off
+
+    /**
+    * Mathematical functions
+    */
+    Simd4 ceil() const noexcept  { return Simd4(_mm_ceil_ps(data)); }
+    Simd4 floor() const noexcept { return Simd4(_mm_floor_ps(data)); }
+    Simd4 round() const noexcept { return Simd4(_mm_round_ps(data, _MM_FROUND_TO_NEAREST_INT)); }
 
     /**
     * Special cases for shuffles.
@@ -751,6 +768,7 @@ public:
     Simd4 operator<=(const Simd4& other) const noexcept { return Simd4(_mm_cmple_ps(data, other.data)); }
     Simd4 operator>=(const Simd4& other) const noexcept { return Simd4(_mm_cmpge_ps(data, other.data)); }
 
+    // clang-format on
 
     /**
     * Prints the Simd4 vector into an ostream.
